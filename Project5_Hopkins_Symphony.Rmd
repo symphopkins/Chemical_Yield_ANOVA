@@ -1,0 +1,118 @@
+---
+title: "Project 5"
+author: "Symphony Hopkins"
+date: "2023-04-12"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**1.Read the dataset in Yield.csv into R. Name the loaded data Yield. And use the head() function to show the first 6 rows.**
+
+```{r, echo = TRUE, include = TRUE}
+#importing dataset
+Yield <- read.csv("~/Documents/Maryville_University/DSCI_618/Week 5/Yield.csv")
+
+#displaying first 6 rows
+head(Yield, 6)
+```
+While loading the dataset, we noticed that it does not match the dataset provided on the Assignment Page. We believe that this row was entered incorrectly: Blocks=Day3, Temperature=High, Pressure=270, Yield=93.7. We only have two levels (Day 1 and Day 2) for the Blocks factor, so Day3 should not have been entered. We will correct this by changing the value from Day3 to Day2 to match the dataset provided on the Assignment Page.
+
+```{r, echo = TRUE, include = TRUE}
+#correcting value
+Yield$Blocks[18] <- 'Day2'
+```
+
+**2.Examine Data Graphically using strip charts, box plots, or other charts that can help you check if treatment and block factors affect the yield.**
+
+We will create strip charts to check if treatment and block factors affect the yield. It is important to note that while we may see differences in mean in these charts, we will need to conduct tests to determine if these differences are statistically significant. 
+
+```{r, echo = TRUE, include = TRUE}
+#importing library
+library(ggplot2)
+library(base)
+
+#creating plot for Temperature vs Yield
+ggplot(data=Yield, mapping=aes(x=Temperature, y=Yield)) + 
+  geom_point() + labs(title='Temperature vs Yield')+stat_summary(geom='point', fun='mean', shape=4)
+```
+It appears that temperature does have an effect on the mean differences in yield. 
+
+```{r, echo = TRUE, include = TRUE}
+#creating plot for Pressure vs Yield
+ggplot(data=Yield, mapping=aes(x=Pressure, y=Yield)) + 
+  geom_point() + labs(title='Pressure vs Yield')+stat_summary(geom='point', fun='mean', shape=4)
+```
+The means for each group appears to be the same, which means the pressure may not have an affect on the yield; however, it is important to note that there is a lot of variability within the groups.
+
+```{r, echo = TRUE, include = TRUE}
+#creating plot for Temperature Grouped by Blocks vs Yield
+ggplot(data=Yield, mapping=aes(x=Temperature, y=Yield, fill=Blocks, color=Blocks)) + 
+  geom_point() + labs(title='Temperature by Days vs Yield')
+```
+
+It appears that there is a difference in yields when we look at the temperature by days. It seems like the yields are higher on Day 2 than on Day 1, which is an issue because we only want to see how temperature (and pressure) affect the yield.
+
+```{r, echo = TRUE, include = TRUE}
+#creating plot for Pressure Grouped by Blocks vs Yield
+ggplot(data=Yield, mapping=aes(x=Pressure, y=Yield, fill=Blocks, color=Blocks)) + 
+  geom_point() + labs(title='Pressure by Days vs Yield')
+```
+
+It appears that there is no block effect on the pressure.  
+
+**3.Explain if the blocking factor is necessary for this experiment.**
+
+Looking at the charts above, the blocks seem to have an effect on yield with pressure, so a blocking factor would be necessary for this experiment.
+
+**4.Conduct the analysis of variance and test hypotheses on the main effects. What conclusions can be drawn using significance level=0.05.**
+
+```{r, echo = TRUE, include = TRUE}
+#converting columns to factors
+fac <- c("Blocks", "Temperature", "Pressure")
+Yield[,fac] <- lapply(Yield[,fac], as.factor) 
+
+#performing ANOVA analysis
+Yield_ANOVA <- aov(Yield ~ Blocks + Temperature + Pressure, data=Yield)
+summary(Yield_ANOVA)
+```
+
+From the results, we can see that only Temperature and Blocks had a significant effect because they had p-values less than 0.05, so we were correct to include the blocking factor.
+
+**5.Construct an interaction plot.**
+
+```{r, echo = TRUE, include = TRUE}
+#creating interaction plot
+with(data = Yield, interaction.plot(Pressure, Temperature, Yield, type="b", pch=19, fixed=T,
+                                             xlab='Pressure', ylab='Mean Yield',col=10:12))
+
+```
+
+We see a slight reversal with the high and low temperatures lines at pressures 250-260, so there may be some interaction there; however after that, it seems like there is no interaction as all of the lines appear to be close to parallel at pressures 260-270.
+
+**6.Test on the interaction between factors. What conclusions can be drawn using significance level=0.05?**
+
+```{r, echo = TRUE, include = TRUE}
+Yield_ANOVA_IR <- aov(Yield ~ Pressure * Temperature, Yield)
+summary(Yield_ANOVA_IR)
+```
+
+From these results, we can conclude that there is no significant interaction between pressure and temperature because it's p-value (0.684494) is greater than our significance level. We also see that there is a significant effect of temperature as it's p-value (0.000181) is less than 0.05.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
